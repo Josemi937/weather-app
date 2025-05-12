@@ -8,56 +8,161 @@ function App() {
   const [forecast, setForecast] = useState(null);
   const [error, setError] = useState('');
 
-  const fetchWeather = async () => {
-    try {
-      setError('');
-      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+ 
+  const setBackground = (weatherType) => {
+    const body = document.querySelector("body");
 
-      // Obtener el clima actual
-      const weatherRes = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
-      );
-      setWeather(weatherRes.data);
+    switch (weatherType) {
+      case "Clear":
+        body.style.backgroundImage = "url('/images/clear-sky.jpg')";
+        break;
+      case "Rain":
+        body.style.backgroundImage = "url('/images/Rain.jpg')";
+        break;
+      case "Clouds":
+        body.style.backgroundImage = "url('/images/cloudy.jpg')";
+        break;
+      case "Snow":
+        body.style.backgroundImage = "url('/images/snow.jpg')";
+        break;
+      case "Thunderstorm":
+        body.style.backgroundImage = "url('/images/thunderstorm.jpg')";
+        break;
+      case "Drizzle":
+        body.style.backgroundImage = "url('/images/drizzle.jpg')";
+        break;
+      default:
+        body.style.backgroundImage = "url('/images/default.jpg')";
+    }
 
-      // Obtener el pronóstico de los próximos 5 días
-      const forecastRes = await axios.get(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
-      );
+  
+    body.style.backgroundSize = "cover";
+    body.style.backgroundPosition = "center center";
+  };
 
-      const forecastData = forecastRes.data.list;
-      
-      // Agrupar los pronósticos por día
-      const groupedForecast = forecastData.reduce((acc, curr) => {
-        const date = curr.dt_txt.split(' ')[0]; // Obtiene la fecha (YYYY-MM-DD)
-        if (!acc[date]) {
-          acc[date] = {
-            tempSum: 0,
-            count: 0,
-            weather: curr.weather[0].description,
-            icon: curr.weather[0].icon
+ 
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+
+       
+        const weatherRes = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+        );
+        setWeather(weatherRes.data);
+
+     
+        const weatherType = weatherRes.data.weather[0].main;
+        setBackground(weatherType);
+
+        
+        const forecastRes = await axios.get(
+          `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+        );
+
+        const forecastData = forecastRes.data.list;
+        
+        
+        const groupedForecast = forecastData.reduce((acc, curr) => {
+          const date = curr.dt_txt.split(' ')[0]; 
+          if (!acc[date]) {
+            acc[date] = {
+              tempSum: 0,
+              count: 0,
+              weather: curr.weather[0].description,
+              icon: curr.weather[0].icon
+            };
+          }
+          acc[date].tempSum += curr.main.temp;
+          acc[date].count += 1;
+          return acc;
+        }, {});
+
+       
+        const forecastArray = Object.keys(groupedForecast).map((date) => {
+          const day = groupedForecast[date];
+          return {
+            date,
+            tempAvg: (day.tempSum / day.count).toFixed(1), 
+            description: day.weather,
+            icon: day.icon
           };
-        }
-        acc[date].tempSum += curr.main.temp;
-        acc[date].count += 1;
-        return acc;
-      }, {});
+        });
 
-      // Calcular la temperatura promedio por día
-      const forecastArray = Object.keys(groupedForecast).map((date) => {
-        const day = groupedForecast[date];
-        return {
-          date,
-          tempAvg: (day.tempSum / day.count).toFixed(1), // Temperatura promedio
-          description: day.weather,
-          icon: day.icon
-        };
+        setForecast(forecastArray); 
+
+      }, (error) => {
+        setError('No se pudo obtener la ubicación');
       });
+    } else {
+      setError('Geolocalización no disponible');
+    }
+  };
 
-      setForecast(forecastArray); // Seteamos los días agrupados
-    } catch (err) {
-      setWeather(null);
-      setForecast(null);
-      setError('Ciudad no encontrada o error en la API');
+  
+  const fetchWeather = async () => {
+    if (city) {
+      try {
+        setError('');
+        const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+
+      
+        const weatherRes = await axios.get(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+        );
+        setWeather(weatherRes.data);
+
+        
+        const weatherType = weatherRes.data.weather[0].main;
+        setBackground(weatherType);
+
+       
+        const forecastRes = await axios.get(
+          `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
+        );
+
+        const forecastData = forecastRes.data.list;
+        
+       
+        const groupedForecast = forecastData.reduce((acc, curr) => {
+          const date = curr.dt_txt.split(' ')[0]; 
+          if (!acc[date]) {
+            acc[date] = {
+              tempSum: 0,
+              count: 0,
+              weather: curr.weather[0].description,
+              icon: curr.weather[0].icon
+            };
+          }
+          acc[date].tempSum += curr.main.temp;
+          acc[date].count += 1;
+          return acc;
+        }, {});
+
+      
+        const forecastArray = Object.keys(groupedForecast).map((date) => {
+          const day = groupedForecast[date];
+          return {
+            date,
+            tempAvg: (day.tempSum / day.count).toFixed(1), 
+            description: day.weather,
+            icon: day.icon
+          };
+        });
+
+        setForecast(forecastArray);
+      } catch (err) {
+        setWeather(null);
+        setForecast(null);
+        setError('Ciudad no encontrada o error en la API');
+      }
+    } else {
+      
+      getLocation();
     }
   };
 

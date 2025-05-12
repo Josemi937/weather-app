@@ -11,3 +11,68 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  padding: 20px;
+  background: linear-gradient(160deg, #89f7fe 0%, #66a6ff 100%);
+  color: #fff;
+}
+
+input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  margin-right: 8px;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.weather-box {
+  margin-top: 25px;
+  padding: 20px 30px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  width: 300px;
+}
+
+.forecast {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.forecast-list {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.forecast-item {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 15px;
+  border-radius: 12px;
+  width: 120px;
+  text-align: center;
+}
+
+.forecast-item img {
+  width: 50px;
+}
+
+.forecast-item p {
+  margin: 5px 0;
+}

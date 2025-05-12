@@ -1,23 +1,111 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import axios from 'axios';
 import './App.css';
 
 function App() {
+  const [city, setCity] = useState('');
+  const [weather, setWeather] = useState(null);
+  const [forecast, setForecast] = useState(null);
+  const [error, setError] = useState('');
+
+  const fetchWeather = async () => {
+    try {
+      setError('');
+      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
+
+      // Obtener el clima actual
+      const weatherRes = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+      );
+      setWeather(weatherRes.data);
+
+      // Obtener el pronóstico de los próximos 5 días
+      const forecastRes = await axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
+      );
+
+      const forecastData = forecastRes.data.list;
+      
+      // Agrupar los pronósticos por día
+      const groupedForecast = forecastData.reduce((acc, curr) => {
+        const date = curr.dt_txt.split(' ')[0]; // Obtiene la fecha (YYYY-MM-DD)
+        if (!acc[date]) {
+          acc[date] = {
+            tempSum: 0,
+            count: 0,
+            weather: curr.weather[0].description,
+            icon: curr.weather[0].icon
+          };
+        }
+        acc[date].tempSum += curr.main.temp;
+        acc[date].count += 1;
+        return acc;
+      }, {});
+
+      // Calcular la temperatura promedio por día
+      const forecastArray = Object.keys(groupedForecast).map((date) => {
+        const day = groupedForecast[date];
+        return {
+          date,
+          tempAvg: (day.tempSum / day.count).toFixed(1), // Temperatura promedio
+          description: day.weather,
+          icon: day.icon
+        };
+      });
+
+      setForecast(forecastArray); // Seteamos los días agrupados
+    } catch (err) {
+      setWeather(null);
+      setForecast(null);
+      setError('Ciudad no encontrada o error en la API');
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <h1>App del Clima</h1>
+      <input
+        type="text"
+        value={city}
+        placeholder="Escribe una ciudad..."
+        onChange={(e) => setCity(e.target.value)}
+      />
+      <button onClick={fetchWeather}>Buscar</button>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {weather && (
+        <div className="weather-box">
+          <h2>{weather.name}</h2>
+          <p>{weather.weather[0].main}</p>
+          <p>Temperatura: {weather.main.temp}°C</p>
+          <p>Humedad: {weather.main.humidity}%</p>
+          <p>Viento: {weather.wind.speed} m/s</p>
+          <img
+            src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+            alt="icono clima"
+          />
+        </div>
+      )}
+
+      {forecast && (
+        <div className="forecast">
+          <h3>Pronóstico de los próximos 5 días:</h3>
+          <div className="forecast-list">
+            {forecast.map((forecastItem, index) => (
+              <div key={index} className="forecast-item">
+                <p>{new Date(forecastItem.date).toLocaleDateString()}</p>
+                <p>{forecastItem.tempAvg}°C</p>
+                <p>{forecastItem.description}</p>
+                <img
+                  src={`https://openweathermap.org/img/wn/${forecastItem.icon}@2x.png`}
+                  alt="icono clima"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

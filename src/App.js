@@ -82,26 +82,36 @@ function App() {
 
         const forecastData = forecastRes.data.list;
 
+        // Agrupar pronóstico por fecha y calcular las temperaturas máxima y mínima para cada día
         const groupedForecast = forecastData.reduce((acc, curr) => {
-          const date = curr.dt_txt.split(' ')[0];
+          const date = curr.dt_txt.split(' ')[0]; // Obtener solo la fecha
+
           if (!acc[date]) {
             acc[date] = {
-              tempSum: 0,
-              count: 0,
+              tempMax: curr.main.temp,
+              tempMin: curr.main.temp,
               weather: curr.weather[0].description,
               icon: curr.weather[0].icon
             };
+          } else {
+            // Actualizar la temperatura máxima y mínima
+            if (curr.main.temp > acc[date].tempMax) {
+              acc[date].tempMax = curr.main.temp;
+            }
+            if (curr.main.temp < acc[date].tempMin) {
+              acc[date].tempMin = curr.main.temp;
+            }
           }
-          acc[date].tempSum += curr.main.temp;
-          acc[date].count += 1;
           return acc;
         }, {});
 
+        // Crear un array con los datos del pronóstico
         const forecastArray = Object.keys(groupedForecast).map((date) => {
           const day = groupedForecast[date];
           return {
             date,
-            tempAvg: (day.tempSum / day.count).toFixed(1),
+            tempMax: day.tempMax.toFixed(1), // Mostrar la temperatura máxima
+            tempMin: day.tempMin.toFixed(1), // Mostrar la temperatura mínima
             description: day.weather,
             icon: day.icon
           };
@@ -139,26 +149,36 @@ function App() {
 
         const forecastData = forecastRes.data.list;
 
+        // Agrupar pronóstico por fecha y calcular las temperaturas máxima y mínima para cada día
         const groupedForecast = forecastData.reduce((acc, curr) => {
-          const date = curr.dt_txt.split(' ')[0];
+          const date = curr.dt_txt.split(' ')[0]; // Obtener solo la fecha
+
           if (!acc[date]) {
             acc[date] = {
-              tempSum: 0,
-              count: 0,
+              tempMax: curr.main.temp,
+              tempMin: curr.main.temp,
               weather: curr.weather[0].description,
               icon: curr.weather[0].icon
             };
+          } else {
+            // Actualizar la temperatura máxima y mínima
+            if (curr.main.temp > acc[date].tempMax) {
+              acc[date].tempMax = curr.main.temp;
+            }
+            if (curr.main.temp < acc[date].tempMin) {
+              acc[date].tempMin = curr.main.temp;
+            }
           }
-          acc[date].tempSum += curr.main.temp;
-          acc[date].count += 1;
           return acc;
         }, {});
 
+        // Crear un array con los datos del pronóstico
         const forecastArray = Object.keys(groupedForecast).map((date) => {
           const day = groupedForecast[date];
           return {
             date,
-            tempAvg: (day.tempSum / day.count).toFixed(1),
+            tempMax: day.tempMax.toFixed(1), // Mostrar la temperatura máxima
+            tempMin: day.tempMin.toFixed(1), // Mostrar la temperatura mínima
             description: day.weather,
             icon: day.icon
           };
@@ -197,7 +217,7 @@ function App() {
           <p>Wind: {weather.wind.speed} m/s</p>
           <img
             src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-            alt="icono clima"
+            alt="weather icon"
           />
         </div>
       )}
@@ -209,11 +229,12 @@ function App() {
             {forecast.map((forecastItem, index) => (
               <div key={index} className="forecast-item">
                 <p>{new Date(forecastItem.date).toLocaleDateString()}</p>
-                <p>{forecastItem.tempAvg}°C</p>
+                <p>Max: {forecastItem.tempMax}°C</p> 
+                <p>Min: {forecastItem.tempMin}°C</p> 
                 <p>{forecastItem.description}</p>
                 <img
                   src={`https://openweathermap.org/img/wn/${forecastItem.icon}@2x.png`}
-                  alt="icono clima"
+                  alt="weather icon"
                 />
               </div>
             ))}
